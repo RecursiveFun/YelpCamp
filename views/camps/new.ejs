@@ -1,13 +1,32 @@
 <% layout('layouts/boilerplate'); %>
-    <form action="/camps" method="POST">
-        <div>
-            <label for="title">Title</label>
-            <input type="text" id="title" name="camp[title]">
-        </div>
-        <div>
-            <label for="location">Location</label>
-            <input type="text" id="location" name="camp[location]">
-        </div>
-        <button>Add Campground</button>
-    </form>
+<div class="row">
+    <h1 class="text-center">New Camp</h1>
+    <div class="col-6 offset-3">
+        <form action="/camps" method="POST">
+            <div class="mb-3">
+            <label for="title" class="form-label">Title</label>
+            <input type="text" class="form-control" id="title" aria-describedby="title" name="camp[title]">
+            </div>
+            <div class="mb-3">
+                <label for="location" class="form-label">Location</label>
+                <input type="text" class="form-control" id="location" aria-describedby="location" name="camp[location]">
+            </div>
+            <div class="mb-3">
+                <label for="image" class="form-label">Image Url</label>
+                <input type="text" class="form-control" id="image" aria-describedby="image" name="camp[image]">
+            </div>
+            <div class="mb-3">
+                <label for="description" class="form-label">Description</label>
+                <textarea type="text" class="form-control" id="description" aria-describedby="description" name="camp[description]"></textarea>
+            </div>
+            <label for="price" class="form-label">Price</label>
+            <div class="input-group mb-3">
+                <span class="input-group-text" id="price-label">$</span>
+                <input type="text" class="form-control" id="price" placeholder="0.00" aria-label="price">
+            </div>
+
+            <button type="submit" class="btn btn-primary">Add Camp</button>
+        </form>
     <div><a href="/camps">Back</a></div>
+    </div>
+</div>
