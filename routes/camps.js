@@ -15,7 +15,6 @@ const validateCamp = (req, res, next) =>{
     }
 }
 
-
 router.get('/', catchAsync(async (req, res) => {
     const camps = await Campground.find({});
     res.render('camps/index', { camps });

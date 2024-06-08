@@ -2,15 +2,11 @@ const express = require ('express');
 const path = require('path');
 const mongoose = require('mongoose');
 const engine = require('ejs-mate');
-//const {campSchema, reviewSchema} = require('./schemas.js');
-//const catchAsync = require('./utils/catchAsync');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
-//const Campground = require('./models/campground');
-//const Review = require('./models/review');
-
 const camps = require('./routes/camps');
 const reviews = require('./routes/reviews');
+
 
 mongoose.connect('mongodb://localhost:27017/yelp-camp');
 
