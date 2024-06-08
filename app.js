@@ -3,11 +3,13 @@ const path = require('path');
 const mongoose = require('mongoose');
 const engine = require('ejs-mate');
 const Joi = require('joi');
-const {campSchema} = require('./schemas.js');
+const {campSchema, reviewSchema} = require('./schemas.js');
 const catchAsync = require('./utils/catchAsync');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 const Campground = require('./models/campground');
+const Review = require('./models/review');
+
 
 
 mongoose.connect('mongodb://localhost:27017/yelp-camp');
@@ -38,6 +40,16 @@ const validateCamp = (req, res, next) =>{
     }
 }
 
+const validateReview = (req, res, next) =>{
+    const {error} = reviewSchema.validate(req.body);
+    if (error){
+        const msg = error.details.map(el => el.message).join(',')
+        throw new ExpressError(msg, 400)
+    } else {
+        next();
+    }
+}
+
 app.get('/', (req, res) => {
     res.render('home');
 });
@@ -60,7 +72,7 @@ app.post('/camps', validateCamp, catchAsync(async (req, res) => {
 }))
 
 app.get('/camps/:id', catchAsync(async (req, res) => {
-    const camp = await Campground.findById(req.params.id);
+    const camp = await Campground.findById(req.params.id).populate('reviews');
     res.render('camps/show', { camp });
 }))
 
@@ -79,6 +91,22 @@ app.delete('/camps/:id', catchAsync(async (req, res) => {
     const { id } = req.params;
     await Campground.findByIdAndDelete(id);
     res.redirect('/camps');
+}))
+
+app.post('/camps/:id/reviews', validateReview, catchAsync(async (req, res) => {
+    const camp = await Campground.findById(req.params.id);
+    const review = new Review(req.body.review);
+    camp.reviews.push(review);
+    await review.save();
+    await camp.save();
+    res.redirect(`/camps/${camp._id}`);
+}))
+
+app.delete('/camps/:id/reviews/:reviewId', catchAsync(async(req, res) => {
+    const {id, reviewId} = req.params;
+    await Campground.findByIdAndUpdate(id, {$pull: {reviews: reviewId}});
+    await Review.findByIdAndDelete(req.params.reviewId);
+    res.redirect(`/camps/${id}`);
 }))
 
 app.all('*', (req, res, next) => {
