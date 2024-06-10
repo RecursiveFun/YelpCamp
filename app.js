@@ -62,7 +62,8 @@ app.use((req, res, next) => {
     next();
 })
 
-app.get('/fakeuser', async (req, res) =>{
+//using for testing
+app.get('/fakeuser', async (req, res) => {
     const user = new User({email: 'fberind@wgu.edu', username: 'felix'})
     const newUser = await User.register(user, 'password');
     res.send(newUser);
