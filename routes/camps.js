@@ -33,13 +33,14 @@ router.post('/', validateCamp, catchAsync(async (req, res) => {
     res.redirect(`camps/${camp._id}`);
 }))
 
+const mongoose = require('mongoose');
+
 router.get('/:id', catchAsync(async (req, res) => {
-    const camp = await Campground.findById(req.params.id).populate('reviews');
-    //TODO:this isnt working to prevent bad routes will need to research an alternative
-    if(!camp){
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
         req.flash('error','Sorry that camp cannot be found.');
         return res.redirect('/camps');
     }
+    const camp = await Campground.findById(req.params.id).populate('reviews');
     res.render('camps/show', { camp});
 }))
 
