@@ -6,8 +6,11 @@ const session = require('express-session');
 const flash = require('connect-flash');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
-const camps = require('./routes/camps');
-const reviews = require('./routes/reviews');
+
+
+const userRoutes = require('./routes/users');
+const campRoutes = require('./routes/camps');
+const reviewRoutes = require('./routes/reviews');
 const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
@@ -62,15 +65,10 @@ app.use((req, res, next) => {
     next();
 })
 
-//using for testing
-app.get('/fakeuser', async (req, res) => {
-    const user = new User({email: 'fberind@wgu.edu', username: 'felix'})
-    const newUser = await User.register(user, 'password');
-    res.send(newUser);
-})
 
-app.use('/camps', camps);
-app.use('/camps/:id/reviews', reviews)
+app.use('/', userRoutes);
+app.use('/camps', campRoutes);
+app.use('/camps/:id/reviews', reviewRoutes)
 
 app.get('/', (req, res) => {
     res.render('home');
