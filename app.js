@@ -16,10 +16,9 @@ const passport = require('passport');
 const LocalStrategy = require('passport-local');
 const User = require('./models/user');
 
-console.log(process.env.API_KEY)
 
 
-mongoose.connect('mongodb://localhost:27017/yelp-camp');
+mongoose.connect(process.env.API_KEY);
 
 const db = mongoose.connection;
 db.on("error", console.error.bind(console, "connection error:"));
