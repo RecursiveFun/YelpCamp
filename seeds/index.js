@@ -30,7 +30,8 @@ for (let i = 0; i < 50; i++){
         title: `${sample(descriptors)} ${sample(places)}`,
         image: 'https://source.unsplash.com/collection/483251',
         description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Cras finibus magna eget tellus venenatis tempor. Aliquam a purus laoreet sapien porttitor condimentum. Ut cursus malesuada efficitur. Sed porttitor interdum aliquet. Fusce pretium malesuada semper. Morbi ultricies a velit id blandit. Nulla sagittis quam laoreet ultricies dapibus. Quisque nec mollis lorem. Nunc porttitor libero nec arcu varius efficitur. Praesent consequat neque odio, ut lacinia lorem pretium in. Phasellus vel erat vel leo facilisis gravida. Pellentesque vitae faucibus felis. Ut vehicula, magna ut feugiat facilisis, dolor quam tristique augue, ut egestas magna sapien quis leo. Curabitur iaculis velit ipsum, ac venenatis mi congue vel. Quisque mattis interdum enim, vel hendrerit nulla fringilla ac. Mauris accumsan feugiat odio, eu eleifend elit tincidunt blandit.',
-        price
+        price,
+        author: '666911c4d743e9faf2097da9'
 
     })
     await camp.save();
