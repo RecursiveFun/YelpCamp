@@ -1,15 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const catchAsync = require('../utils/catchAsync');
-const Campground = require('../models/campground');
 const camps = require('../controllers/camps');
 const {isLoggedIn, isAuthor, validateCamp} = require('../middleware');
 
-
 router.get('/', catchAsync(camps.index));
 
-router.get('/new', isLoggedIn, catchAsync(camps.renderNewCampForm));
-
+router.get('/new', isLoggedIn, camps.renderNewCampForm);
 
 router.post('/', validateCamp, isLoggedIn, catchAsync(camps.createCamp));
 

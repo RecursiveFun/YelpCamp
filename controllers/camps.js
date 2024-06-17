@@ -1,5 +1,4 @@
 const mongoose = require('mongoose');
-const Campground = require('../models/campground');
 const Camp = require('../models/campground');
 
 module.exports.index = async (req, res) => {
