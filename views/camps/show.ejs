@@ -5,7 +5,9 @@
 <div class="row">
     <div class="col-6">
         <div class="card mb-3">
-            <img src="<%= camp.image%>" class="card-img-top" alt="...">
+            <% for(let img of camp.images) { %>
+            <img src="<%= img.url%>" class="card-img-top" alt="...">
+            <% } %>
             <div class="card-body">
                 <h5 class="card-title"><%= camp.title%></h5>
                 <p class="card-text"><%= camp.description%></p>
@@ -45,8 +47,6 @@
                 <input type="radio" id="first-rate5" name="review[rating]" value="5" />
                 <label for="first-rate5" title="Amazing">5 stars</label>
               </fieldset>
-
-
             <div class="mb-3">
                 <label class="form-label" for="body">Review</label>
                 <textarea class="form-control" name="review[body]" id="body" cols="30" rows="3" required></textarea>

@@ -12,6 +12,7 @@ module.exports.renderNewCampForm = (req, res) => {
 
 module.exports.createCamp = async (req, res, next) => {
     const camp = new Camp(req.body.camp);
+    camp.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
     camp.author = req.user._id;
     await camp.save();
     req.flash('success', 'Successfully created a new camp!');
