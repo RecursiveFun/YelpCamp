@@ -12,6 +12,7 @@ const flash = require('connect-flash');
 const ExpressError = require('./utils/ExpressError');
 const methodOverride = require('method-override');
 const mongoSanitize = require('express-mongo-sanitize');
+const MongoDBStore = require('connect-mongo')(session);
 
 
 
@@ -44,7 +45,18 @@ app.use(methodOverride('_method'));
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(mongoSanitize());
 
+const store = new MongoDBStore({
+    url: process.env.API_KEY,
+    secret: 'thisshouldbeabettersecret!',
+    touchAfter: 24 * 60 * 60
+})
+
+store.on('error', function(error) {
+    console.log('Session Store Error', error)
+});
+
 const sessionConfig = {
+    store,
     name: 'session',
     secret: 'thisshouldbeabettersecret!',
     resave: false,
