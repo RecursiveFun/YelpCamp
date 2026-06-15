@@ -42,6 +42,13 @@ function getMongoUrl() {
         throw new Error('API_KEY must be a MongoDB connection string.');
     }
 
+    const credentials = url.split('@')[0] || '';
+    if (credentials.includes('%3C') || credentials.includes('%3E')) {
+        throw new Error(
+            'API_KEY has angle brackets in the password (e.g. <berinde>). Atlas uses <password> as a placeholder — use only the real password, without < or >.'
+        );
+    }
+
     return url;
 }
 
@@ -91,29 +98,7 @@ if (!process.env.VERCEL) {
 }
 app.use(mongoSanitize());
 
-app.use(async (req, res, next) => {
-    try {
-        await connectDB();
-        next();
-    } catch (error) {
-        next(error);
-    }
-});
-
-const mongoUrl = (process.env.API_KEY || '').trim();
-
-const store = new MongoDBStore({
-    url: mongoUrl,
-    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
-    touchAfter: 24 * 60 * 60,
-});
-
-store.on('error', function(error) {
-    console.log('Session Store Error', error)
-});
-
-const sessionConfig = {
-    store,
+const sessionOptions = {
     name: 'session',
     secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
     resave: false,
@@ -123,11 +108,36 @@ const sessionConfig = {
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-        maxAge: 1000 * 60 * 60 * 24 * 7
-    }
-}
+        maxAge: 1000 * 60 * 60 * 24 * 7,
+    },
+};
 
-app.use(session(sessionConfig))
+let sessionMiddleware;
+
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+
+        if (!sessionMiddleware) {
+            const store = new MongoDBStore({
+                url: getMongoUrl(),
+                secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
+                touchAfter: 24 * 60 * 60,
+            });
+
+            store.on('error', (error) => {
+                console.error('Session Store Error', error.message);
+            });
+
+            sessionMiddleware = session({ ...sessionOptions, store });
+        }
+
+        sessionMiddleware(req, res, next);
+    } catch (error) {
+        next(error);
+    }
+});
+
 app.use(flash());
 app.use(helmet());
 
@@ -209,16 +219,20 @@ app.use((err, req, res, next) => {
 
     if (err.name === 'MongooseServerSelectionError') {
         err.message = 'Unable to connect to MongoDB. Check your API_KEY connection string and Atlas network access (allow 0.0.0.0/0 for Vercel).';
-    } else if (err.message?.includes('authentication failed')) {
-        err.message = 'MongoDB authentication failed. Check your database username and password in API_KEY.';
+    } else if (err.message?.includes('authentication failed') || err.message?.includes('bad auth')) {
+        err.message = 'MongoDB authentication failed. Reset your Atlas database user password and update API_KEY in Vercel with a fresh connection string from Atlas.';
     } else if (err.message?.includes('querySrv')) {
         err.message = 'MongoDB DNS lookup failed. In Atlas, copy the standard connection string (mongodb://) instead of mongodb+srv://.';
     } else if (!err.message) {
         err.message = 'Something went wrong.';
     }
 
+    res.locals.currentUser = res.locals.currentUser ?? null;
+    res.locals.success = res.locals.success ?? null;
+    res.locals.error = res.locals.error ?? null;
+
     res.status(statusCode).render('error', { err });
-})
+});
 
 module.exports = app;
 
