@@ -31,14 +31,31 @@ if (!cached) {
     cached = global.mongoose = { conn: null, promise: null };
 }
 
+function getMongoUrl() {
+    const url = (process.env.API_KEY || '').trim();
+
+    if (!url) {
+        throw new Error('API_KEY environment variable is not set.');
+    }
+
+    if (!url.startsWith('mongodb://') && !url.startsWith('mongodb+srv://')) {
+        throw new Error('API_KEY must be a MongoDB connection string.');
+    }
+
+    return url;
+}
+
 async function connectDB() {
     if (cached.conn) {
         return cached.conn;
     }
 
+    const mongoUrl = getMongoUrl();
+
     if (!cached.promise) {
-        cached.promise = mongoose.connect(process.env.API_KEY, {
+        cached.promise = mongoose.connect(mongoUrl, {
             bufferCommands: false,
+            serverSelectionTimeoutMS: 15000,
         }).then((mongooseInstance) => {
             console.log("Database connected");
             return mongooseInstance;
@@ -49,15 +66,11 @@ async function connectDB() {
         cached.conn = await cached.promise;
     } catch (error) {
         cached.promise = null;
-        console.error("connection error:", error);
+        console.error("connection error:", error.message);
         throw error;
     }
 
     return cached.conn;
-}
-
-if (!process.env.API_KEY) {
-    console.error('API_KEY environment variable is not set');
 }
 
 const app = express();
@@ -87,8 +100,10 @@ app.use(async (req, res, next) => {
     }
 });
 
+const mongoUrl = (process.env.API_KEY || '').trim();
+
 const store = new MongoDBStore({
-    url: process.env.API_KEY,
+    url: mongoUrl,
     secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
     touchAfter: 24 * 60 * 60,
 });
@@ -191,9 +206,19 @@ app.all('*', (req, res, next) => {
 
 app.use((err, req, res, next) => {
     const { statusCode = 500 } = err;
-    if(!err.message) err.message = 'Something went wrong.';
-    res.status(statusCode).render('error', {err});
- })
+
+    if (err.name === 'MongooseServerSelectionError') {
+        err.message = 'Unable to connect to MongoDB. Check your API_KEY connection string and Atlas network access (allow 0.0.0.0/0 for Vercel).';
+    } else if (err.message?.includes('authentication failed')) {
+        err.message = 'MongoDB authentication failed. Check your database username and password in API_KEY.';
+    } else if (err.message?.includes('querySrv')) {
+        err.message = 'MongoDB DNS lookup failed. In Atlas, copy the standard connection string (mongodb://) instead of mongodb+srv://.';
+    } else if (!err.message) {
+        err.message = 'Something went wrong.';
+    }
+
+    res.status(statusCode).render('error', { err });
+})
 
 module.exports = app;
 
