@@ -25,15 +25,44 @@ const User = require('./models/user');
 
 
 
-mongoose.connect(process.env.API_KEY);
+let cached = global.mongoose;
 
-const db = mongoose.connection;
-db.on("error", console.error.bind(console, "connection error:"));
-db.once("open", () => {
-    console.log("Database connected");
-});
+if (!cached) {
+    cached = global.mongoose = { conn: null, promise: null };
+}
+
+async function connectDB() {
+    if (cached.conn) {
+        return cached.conn;
+    }
+
+    if (!cached.promise) {
+        cached.promise = mongoose.connect(process.env.API_KEY, {
+            bufferCommands: false,
+        }).then((mongooseInstance) => {
+            console.log("Database connected");
+            return mongooseInstance;
+        });
+    }
+
+    try {
+        cached.conn = await cached.promise;
+    } catch (error) {
+        cached.promise = null;
+        console.error("connection error:", error);
+        throw error;
+    }
+
+    return cached.conn;
+}
+
+connectDB();
 
 const app = express();
+
+if (process.env.NODE_ENV === 'production' || process.env.VERCEL) {
+    app.set('trust proxy', 1);
+}
 
 app.engine('ejs', engine);
 
@@ -63,7 +92,8 @@ const sessionConfig = {
     saveUninitialized: true,
     cookie: {
         httpOnly: true,
-        // secure: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
         expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
@@ -152,6 +182,11 @@ app.use((err, req, res, next) => {
     res.status(statusCode).render('error', {err});
  })
 
-app.listen(3000, () => {
-    console.log("Serving on port 3000");
-});
+module.exports = app;
+
+if (!process.env.VERCEL) {
+    const port = process.env.PORT || 3000;
+    app.listen(port, () => {
+        console.log(`Serving on port ${port}`);
+    });
+}
