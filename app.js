@@ -56,7 +56,9 @@ async function connectDB() {
     return cached.conn;
 }
 
-connectDB();
+if (!process.env.API_KEY) {
+    console.error('API_KEY environment variable is not set');
+}
 
 const app = express();
 
@@ -71,14 +73,25 @@ app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({extended: true}));
 app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'public')))
+if (!process.env.VERCEL) {
+    app.use(express.static(path.join(__dirname, 'public')));
+}
 app.use(mongoSanitize());
+
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (error) {
+        next(error);
+    }
+});
 
 const store = new MongoDBStore({
     url: process.env.API_KEY,
-    secret: 'thisshouldbeabettersecret!',
-    touchAfter: 24 * 60 * 60
-})
+    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
+    touchAfter: 24 * 60 * 60,
+});
 
 store.on('error', function(error) {
     console.log('Session Store Error', error)
@@ -87,7 +100,7 @@ store.on('error', function(error) {
 const sessionConfig = {
     store,
     name: 'session',
-    secret: 'thisshouldbeabettersecret!',
+    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
     resave: false,
     saveUninitialized: true,
     cookie: {

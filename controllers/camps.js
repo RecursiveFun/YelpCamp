@@ -1,10 +1,16 @@
 const mongoose = require('mongoose');
 const Camp = require('../models/campground');
 const mbxGeocoding = require('@mapbox/mapbox-sdk/services/geocoding');
-const mapBoxToken = process.env.MAPBOX_TOKEN;
-const geocoder = mbxGeocoding({accessToken: mapBoxToken});
 
 const cloudinary = require('cloudinary').v2;
+
+function getGeocoder() {
+    const mapBoxToken = process.env.MAPBOX_TOKEN;
+    if (!mapBoxToken) {
+        throw new Error('MAPBOX_TOKEN environment variable is not set');
+    }
+    return mbxGeocoding({ accessToken: mapBoxToken });
+}
 
 module.exports.index = async (req, res) => {
     const camps = await Camp.find({});
@@ -16,6 +22,7 @@ module.exports.renderNewCampForm = (req, res) => {
 };
 
 module.exports.createCamp = async (req, res, next) => {
+    const geocoder = getGeocoder();
     const geoData = await geocoder.forwardGeocode({
         query: req.body.camp.location,
         limit: 1
