@@ -227,6 +227,17 @@ app.use((err, req, res, next) => {
         err.message = 'Something went wrong.';
     }
 
+    if (req.originalUrl === '/camps' && req.method === 'POST') {
+        req.flash('error', err.message);
+        return res.redirect('/camps/new');
+    }
+
+    if (req.originalUrl.match(/^\/camps\/[^/]+$/) && req.method === 'PUT') {
+        req.flash('error', err.message);
+        const id = req.originalUrl.split('/')[2];
+        return res.redirect(`/camps/${id}/edit`);
+    }
+
     res.locals.currentUser = res.locals.currentUser ?? null;
     res.locals.success = res.locals.success ?? null;
     res.locals.error = res.locals.error ?? null;

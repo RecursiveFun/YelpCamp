@@ -21,15 +21,21 @@ module.exports.renderNewCampForm = (req, res) => {
     res.render('camps/new');
 };
 
-module.exports.createCamp = async (req, res, next) => {
+module.exports.createCamp = async (req, res) => {
     const geocoder = getGeocoder();
     const geoData = await geocoder.forwardGeocode({
         query: req.body.camp.location,
-        limit: 1
+        limit: 1,
     }).send();
+
+    if (!geoData.body.features?.length) {
+        req.flash('error', `Could not find "${req.body.camp.location}". Try a more specific location.`);
+        return res.redirect('/camps/new');
+    }
+
     const camp = new Camp(req.body.camp);
     camp.geometry = geoData.body.features[0].geometry;
-    camp.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
+    camp.images = (req.files || []).map((f) => ({ url: f.path, filename: f.filename }));
     camp.author = req.user._id;
     await camp.save();
     req.flash('success', 'Successfully created a new camp!');
@@ -62,8 +68,8 @@ module.exports.editCamp = async (req, res) => {
 
 module.exports.updateCamp = async (req, res) => {
     const { id } = req.params;
-    const camp = await Camp.findByIdAndUpdate(id, {...req.body.camp});
-    const imgs = req.files.map(f => ({ url: f.path, filename: f.filename }));
+    const camp = await Camp.findByIdAndUpdate(id, { ...req.body.camp });
+    const imgs = (req.files || []).map((f) => ({ url: f.path, filename: f.filename }));
     camp.images.push(...imgs);
     await camp.save();
     if(req.body.deleteImages){

@@ -45,9 +45,7 @@ Create a `.env` file in the project root:
 ```env
 API_KEY=your_mongodb_connection_string
 MAPBOX_TOKEN=your_mapbox_token
-CLOUDINARY_NAME=your_cloudinary_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_api_key
-CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+CLOUDINARY_URL=cloudinary://your_api_key:your_api_secret@do2b86jpr
 SESSION_SECRET=your_long_random_secret
 ```
 
@@ -55,9 +53,7 @@ SESSION_SECRET=your_long_random_secret
 | --- | --- |
 | `API_KEY` | MongoDB connection string |
 | `MAPBOX_TOKEN` | Mapbox API access token |
-| `CLOUDINARY_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
+| `CLOUDINARY_URL` | Cloudinary connection URL from your dashboard (format: `cloudinary://api_key:api_secret@cloud_name`) |
 | `SESSION_SECRET` | Random string used to sign session cookies (make your own; 32+ characters) |
 
 ### Run Locally

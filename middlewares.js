@@ -20,9 +20,9 @@ module.exports.storeReturnTo = (req, res, next) => {
 };
 
 module.exports.validateCamp = (req, res, next) =>{
-    const {error} = campSchema.validate(req.body);
+    const {error} = campSchema.validate(req.body, { convert: true });
     if (error){
-        const msg = error.details.map(el => el.message).join(',');
+        const msg = error.details.map(el => el.message).join(', ');
         throw new ExpressError(msg, 400);
     } else {
         next();

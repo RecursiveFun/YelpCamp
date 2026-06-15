@@ -18,7 +18,7 @@ module.exports.registerUser = async (req, res) => {
         res.redirect('/camps');
     });
     } catch(e){
-        req.flash('error', e.message);
+        req.flash('error', e.message || 'Registration failed.');
         res.redirect('/register');
     }
 };
